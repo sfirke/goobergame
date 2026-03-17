@@ -13,8 +13,5 @@ export class Worm extends Phaser.GameObjects.Text {
     });
     this.setOrigin(0.5, 1);
     this.setDisplaySize(36, 40);
-    
-    // Physics body will be configured by the scene after adding
-    this._bodyConfigured = false;
   }
 }

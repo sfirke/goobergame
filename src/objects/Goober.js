@@ -15,9 +15,6 @@ export class Goober extends Phaser.GameObjects.Text {
     });
     this.setOrigin(0.5, 1);
     this.setDisplaySize(40, 48);
-    
-    // Physics body will be configured by the scene after adding
-    this._bodyConfigured = false;
 
     // Direction tracking: 1 = right (default), -1 = left
     this._facing = 1;
