@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Goober } from '../objects/Goober.js';
 import { Worm } from '../objects/Worm.js';
-import { calcScore, getGameSpeed, getWormSpawnDelay } from '../logic/scoring.js';
+import { calcScore, getGameSpeed, getWormSpawnDelay, checkAABBCollision } from '../logic/scoring.js';
 
 // Ground position
 const GROUND_Y = 240;
@@ -38,15 +38,6 @@ export class GameScene extends Phaser.Scene {
 
     // Worms group
     this.worms = this.add.group();
-
-    // Overlap detection: Goober hits worm
-    this.physics.add.overlap(
-      this.goober,
-      this.worms,
-      this._onHitWorm,
-      null,
-      this
-    );
 
     // Score display
     this.scoreText = this.add.text(W - 10, 10, 'Score: 0', {
@@ -88,6 +79,30 @@ export class GameScene extends Phaser.Scene {
       worm.x -= speed / 60;
       if (worm.x < -50) {
         worm.destroy();
+      }
+
+      // Manual AABB collision check
+      // Get display bounds for both Goober and Worm
+      const gooberBounds = this.goober.getBounds();
+      const wormBounds = worm.getBounds();
+
+      if (
+        checkAABBCollision(
+          {
+            x: gooberBounds.x,
+            y: gooberBounds.y,
+            width: gooberBounds.width,
+            height: gooberBounds.height,
+          },
+          {
+            x: wormBounds.x,
+            y: wormBounds.y,
+            width: wormBounds.width,
+            height: wormBounds.height,
+          }
+        )
+      ) {
+        this._onHitWorm();
       }
     });
   }
