@@ -4,16 +4,16 @@ import { GameScene } from './scenes/GameScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
 
 const config = {
-  type: Phaser.AUTO,           // use WebGL if available, fall back to Canvas
+  type: Phaser.AUTO,
   parent: 'game-container',
   width: 800,
   height: 300,
-  backgroundColor: '#87CEEB', // sky blue — also the fallback before the scene draws
+  backgroundColor: '#87ceeb',
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 1200 },   // strong gravity → snappy jumps
-      debug: false,            // flip to true to see hitboxes while developing
+      gravity: { y: 800 },
+      debug: false,
     },
   },
   scale: {
