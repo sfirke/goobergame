@@ -26,6 +26,7 @@ export class GameScene extends Phaser.Scene {
     this.goober = new Goober(this, 120, GROUND_TOP_Y - 24);
     this.add.existing(this.goober);
     this.physics.add.existing(this.goober);
+    this.goober.setDepth(10); // render in foreground, in front of background
 
     this.worms = this.add.group();
 
@@ -207,6 +208,7 @@ export class GameScene extends Phaser.Scene {
     this.add.existing(worm);
     this.physics.add.existing(worm);
     worm.body.allowGravity = false;
+    worm.setDepth(5); // visible but behind Goober
     this.worms.add(worm);
   }
 
