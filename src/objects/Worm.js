@@ -11,8 +11,10 @@ export class Worm extends Phaser.GameObjects.Text {
       fontSize: '40px',
       color: '#000000',
     });
-    this.setOrigin(0.5, 1); // anchor at base / feet
-    // Explicitly set display bounds for physics
+    this.setOrigin(0.5, 1);
     this.setDisplaySize(36, 40);
+    
+    // Physics body will be configured by the scene after adding
+    this._bodyConfigured = false;
   }
 }

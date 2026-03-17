@@ -4,7 +4,7 @@ import { Worm } from '../objects/Worm.js';
 import { calcScore, getGameSpeed, getWormSpawnDelay } from '../logic/scoring.js';
 
 // Ground position
-const GROUND_Y = 240;
+const GROUND_Y = 170;
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -27,6 +27,9 @@ export class GameScene extends Phaser.Scene {
     this.add.existing(this.goober);
     this.physics.add.existing(this.goober);
     this.goober.body.setBounce(0);
+    // Set collision body: roughly a 30px wide x 40px tall box at the feet
+    this.goober.body.setSize(30, 40);
+    this.goober.body.setOffset(-15, -40); // offset from origin (0.5, 1 at bottom)
     this.goober.setDepth(10);
 
     // Create ground platform
@@ -109,6 +112,9 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.existing(worm);
     worm.body.allowGravity = false;
     worm.body.setImmovable(true);
+    // Set collision body: roughly a 30px wide x 40px tall box at the feet
+    worm.body.setSize(30, 40);
+    worm.body.setOffset(-15, -40); // offset from origin (0.5, 1 at bottom)
     worm.setDepth(5);
     this.worms.add(worm);
   }

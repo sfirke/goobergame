@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcScore, getGameSpeed, getWormSpawnDelay } from '../src/logic/scoring.js';
+import { calcScore, getGameSpeed, getWormSpawnDelay, checkAABBCollision } from '../src/logic/scoring.js';
 
 // ---------------------------------------------------------------------------
 // calcScore
@@ -62,5 +62,41 @@ describe('getWormSpawnDelay', () => {
 
   it('never goes below 600ms', () => {
     expect(getWormSpawnDelay(999_999)).toBe(600);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// checkAABBCollision
+// ---------------------------------------------------------------------------
+describe('checkAABBCollision', () => {
+  it('detects overlapping boxes', () => {
+    const goober = { x: 100, y: 100, width: 30, height: 40 };
+    const worm = { x: 110, y: 100, width: 30, height: 40 };
+    expect(checkAABBCollision(goober, worm)).toBe(true);
+  });
+
+  it('returns false when boxes do not overlap horizontally', () => {
+    const goober = { x: 50, y: 100, width: 30, height: 40 };
+    const worm = { x: 150, y: 100, width: 30, height: 40 };
+    expect(checkAABBCollision(goober, worm)).toBe(false);
+  });
+
+  it('returns false when boxes do not overlap vertically', () => {
+    const goober = { x: 100, y: 50, width: 30, height: 40 };
+    const worm = { x: 100, y: 150, width: 30, height: 40 };
+    expect(checkAABBCollision(goober, worm)).toBe(false);
+  });
+
+  it('detects collision when boxes just touch at edges', () => {
+    const goober = { x: 100, y: 100, width: 30, height: 40 };
+    const worm = { x: 130, y: 100, width: 30, height: 40 };
+    // At x=130, goober's right edge is at 100+30=130, so they touch but don't overlap
+    expect(checkAABBCollision(goober, worm)).toBe(false);
+  });
+
+  it('handles goober jumping over worm (no y overlap)', () => {
+    const gooberInAir = { x: 100, y: 50, width: 30, height: 40 };
+    const wormOnGround = { x: 100, y: 100, width: 30, height: 40 };
+    expect(checkAABBCollision(gooberInAir, wormOnGround)).toBe(false);
   });
 });

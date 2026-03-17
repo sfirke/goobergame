@@ -45,3 +45,20 @@ export function getWormSpawnDelay(elapsedMs) {
   const delay = 2500 * (200 / speed);
   return Math.max(delay, 600);
 }
+
+/**
+ * AABB (Axis-Aligned Bounding Box) collision detection.
+ * Both boxes are defined as { x, y, width, height } where x,y is the top-left.
+ *
+ * @param {Object} box1  - { x, y, width, height }
+ * @param {Object} box2  - { x, y, width, height }
+ * @returns {boolean}     - true if boxes overlap
+ */
+export function checkAABBCollision(box1, box2) {
+  return (
+    box1.x < box2.x + box2.width &&
+    box1.x + box1.width > box2.x &&
+    box1.y < box2.y + box2.height &&
+    box1.y + box1.height > box2.y
+  );
+}
