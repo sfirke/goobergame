@@ -13,9 +13,12 @@ import Phaser from 'phaser';
 export class Goober extends Phaser.GameObjects.Text {
   constructor(scene, x, y) {
     super(scene, x, y, '🐿️', {
-      fontSize: '36px',
+      fontSize: '48px',
+      color: '#000000',
     });
     this.setOrigin(0.5, 1); // anchor at feet so position = ground contact point
+    // Explicitly set display bounds so physics body and rendering work properly
+    this.setDisplaySize(40, 48);
 
     // Track swipe start position for mobile input
     this._swipeStartY = 0;

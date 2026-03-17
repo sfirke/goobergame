@@ -202,9 +202,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   _spawnWorm() {
-    // How far the worm sticks up above the ground surface (px)
-    const protrusion = Phaser.Math.Between(30, 80);
-    const worm = new Worm(this, this.scale.width + 30, GROUND_TOP_Y - protrusion / 2, protrusion);
+    // Spawn worm at ground level, off the right edge
+    const worm = new Worm(this, this.scale.width + 30, GROUND_TOP_Y);
     this.add.existing(worm);
     this.physics.add.existing(worm);
     worm.body.allowGravity = false;
