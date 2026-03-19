@@ -95,7 +95,7 @@ export class Goober extends Phaser.GameObjects.Text {
 
   _jump() {
     if (this.body && this.body.blocked.down) {
-      this.body.setVelocityY(-400); // reduced from -720 (approximately half height)
+      this.body.setVelocityY(-500); // increased from -400 for better air control time
       this.emit('jumped');
     }
   }

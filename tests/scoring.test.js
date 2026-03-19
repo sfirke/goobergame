@@ -52,16 +52,16 @@ describe('getGameSpeed', () => {
 // getWormSpawnDistance
 // ---------------------------------------------------------------------------
 describe('getWormSpawnDistance', () => {
-  it('starts at 300 pixels at worldX 0', () => {
-    expect(getWormSpawnDistance(0)).toBe(300);
+  it('starts at 350 pixels at worldX 0', () => {
+    expect(getWormSpawnDistance(0)).toBe(350);
   });
 
   it('decreases as you progress further into the world', () => {
     expect(getWormSpawnDistance(10_000)).toBeLessThan(getWormSpawnDistance(0));
   });
 
-  it('never goes below 70 pixels', () => {
-    expect(getWormSpawnDistance(999_999)).toBe(70);
+  it('never goes below 150 pixels', () => {
+    expect(getWormSpawnDistance(999_999)).toBe(150);
   });
 });
 

@@ -34,17 +34,17 @@ export function getGameSpeed(elapsedMs) {
 
 /**
  * How many world pixels should elapse between worm spawns.
- * Starts at 300px, shrinks as distance increases, never below 70px.
- * Effectively: progress further → encounter worms more frequently.
+ * Starts at 350px, shrinks as distance increases, never below 150px.
+ * Effectively: progress further → encounter worms more frequently, but always landable.
  *
  * @param {number} worldX  - the player's world X position (or camera scroll X)
  * @returns {number}       - spawn distance in world pixels
  */
 export function getWormSpawnDistance(worldX) {
-  // Every 5000 pixels, spawn rate increases by ~1.5x (distance between worms tightens)
-  const distanceLevel = Math.floor(worldX / 5000);
-  const spawnDistance = 300 * Math.pow(0.85, distanceLevel);
-  return Math.max(spawnDistance, 70);
+  // Every 7500 pixels, spawn rate increases by ~1.5x (distance between worms tightens)
+  const distanceLevel = Math.floor(worldX / 7500);
+  const spawnDistance = 350 * Math.pow(0.88, distanceLevel);
+  return Math.max(spawnDistance, 150);
 }
 
 /**
