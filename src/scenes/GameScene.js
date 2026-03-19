@@ -116,26 +116,30 @@ export class GameScene extends Phaser.Scene {
         worm.destroy();
       }
 
-      // Manual AABB collision check
-      // Get display bounds for both Goober and Worm
-      const gooberBounds = this.goober.getBounds();
-      const wormBounds = worm.getBounds();
+      // Manual AABB collision check using tight display bounds, not text padding.
+      // Goober: 40px wide, 48px tall; Worm: 36px wide, 40px tall
+      // Origin is (0.5, 1) so bounds are centered horizontally, bottom-aligned vertically.
+      const goober = this.goober;
+      const gooberW = 40;
+      const gooberH = 48;
+      const gooberBounds = {
+        x: goober.x - gooberW / 2,
+        y: goober.y - gooberH,
+        width: gooberW,
+        height: gooberH,
+      };
+
+      const wormW = 36;
+      const wormH = 40;
+      const wormBounds = {
+        x: worm.x - wormW / 2,
+        y: worm.y - wormH,
+        width: wormW,
+        height: wormH,
+      };
 
       if (
-        checkAABBCollision(
-          {
-            x: gooberBounds.x,
-            y: gooberBounds.y,
-            width: gooberBounds.width,
-            height: gooberBounds.height,
-          },
-          {
-            x: wormBounds.x,
-            y: wormBounds.y,
-            width: wormBounds.width,
-            height: wormBounds.height,
-          }
-        )
+        checkAABBCollision(gooberBounds, wormBounds)
       ) {
         this._onHitWorm();
       }
