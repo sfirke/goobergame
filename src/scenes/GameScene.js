@@ -16,22 +16,31 @@ export class GameScene extends Phaser.Scene {
     const W = this.scale.width;
     const H = this.scale.height;
 
+    // Set world bounds to allow infinite scrolling to the right
+    const WORLD_WIDTH = 20000;
+    this.physics.world.setBounds(0, 0, WORLD_WIDTH, H);
+
     // Simple blue background
-    this.add.rectangle(W / 2, H / 2, W, H, 0x87ceeb).setDepth(0);
+    this.add.rectangle(W / 2, H / 2, W, H, 0x87ceeb).setDepth(0).setScrollFactor(0);
 
     // Green ground bar
-    this.add.rectangle(W / 2, GROUND_Y + 8, W, 16, 0x5a9e3a).setDepth(1);
+    this.add.rectangle(W / 2, GROUND_Y + 8, W, 16, 0x5a9e3a).setDepth(1).setScrollFactor(0);
 
-    // Create Goober
-    this.goober = new Goober(this, 80, GROUND_Y);
+    // Create Goober — left boundary is updated dynamically each frame to match camera scroll
+    this.goober = new Goober(this, 80, GROUND_Y, 20, Infinity);
     this.add.existing(this.goober);
     this.physics.add.existing(this.goober);
     this.goober.body.setBounce(0);
     this.goober.setDepth(10);
+    this.goober.body.setCollideWorldBounds(true);
 
-    // Create ground platform
+    // Set camera to follow the Goober
+    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, H);
+    this.cameras.main.startFollow(this.goober, true, 0.5, 0);
+
+    // Create ground platform (very wide to extend across the world)
     this.groundPlatform = this.physics.add.staticGroup();
-    this.groundPlatform.create(W / 2, GROUND_Y + 16, null).setScale(W, 1).refreshBody();
+    this.groundPlatform.create(WORLD_WIDTH / 2, GROUND_Y + 16, null).setScale(WORLD_WIDTH, 1).refreshBody();
 
     // Collide Goober with ground
     this.physics.add.collider(this.goober, this.groundPlatform);
@@ -39,20 +48,20 @@ export class GameScene extends Phaser.Scene {
     // Worms group
     this.worms = this.add.group();
 
-    // Score display
+    // Score display (fixed to camera)
     this.scoreText = this.add.text(W - 10, 10, 'Score: 0', {
       fontSize: '20px',
       color: '#000000',
       fontFamily: 'monospace',
-    }).setOrigin(1, 0).setDepth(10);
+    }).setOrigin(1, 0).setDepth(10).setScrollFactor(0);
 
-    // Jump hint
+    // Jump hint (fixed to camera)
     this.hintText = this.add.text(W / 2, H / 2, 'Press SPACE or swipe up to jump!', {
       fontSize: '16px',
       color: '#000000',
       fontFamily: 'sans-serif',
       align: 'center',
-    }).setOrigin(0.5).setDepth(10);
+    }).setOrigin(0.5).setDepth(10).setScrollFactor(0);
 
     this.goober.once('jumped', () => {
       if (this.hintText) {
@@ -72,12 +81,16 @@ export class GameScene extends Phaser.Scene {
     const score = calcScore(elapsed);
     this.scoreText.setText(`Score: ${score}`);
 
+    // Push left boundary forward with the camera so the player can't hide behind it
+    this.goober._minX = this.cameras.main.scrollX + 20;
+
     this.goober.update();
 
     const speed = getGameSpeed(elapsed);
+    const camLeft = this.cameras.main.scrollX;
     this.worms.getChildren().forEach((worm) => {
       worm.x -= speed / 60;
-      if (worm.x < -50) {
+      if (worm.x < camLeft - 50) {
         worm.destroy();
       }
 
@@ -119,7 +132,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   _spawnWorm() {
-    const worm = new Worm(this, this.scale.width + 30, GROUND_Y);
+    const worm = new Worm(this, this.cameras.main.scrollX + this.scale.width + 30, GROUND_Y);
     this.add.existing(worm);
     this.physics.add.existing(worm);
     worm.body.allowGravity = false;

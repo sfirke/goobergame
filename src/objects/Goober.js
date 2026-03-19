@@ -8,7 +8,7 @@ import Phaser from 'phaser';
  * Emoji flips to face the direction of travel.
  */
 export class Goober extends Phaser.GameObjects.Text {
-  constructor(scene, x, y) {
+  constructor(scene, x, y, minX = 0, maxX = Infinity) {
     super(scene, x, y, '🐿️', {
       fontSize: '48px',
       color: '#000000',
@@ -18,6 +18,10 @@ export class Goober extends Phaser.GameObjects.Text {
 
     // Direction tracking: 1 = right (default), -1 = left
     this._facing = 1;
+
+    // Boundary constraints
+    this._minX = minX;
+    this._maxX = maxX;
 
     // Input setup
     this._cursors = scene.input.keyboard.createCursorKeys();
@@ -65,6 +69,20 @@ export class Goober extends Phaser.GameObjects.Text {
     // Apply horizontal velocity
     if (this.body) {
       this.body.setVelocityX(velocityX);
+    }
+
+    // Enforce boundaries
+    if (this.x < this._minX) {
+      this.x = this._minX;
+      if (this.body) {
+        this.body.setVelocityX(0);
+      }
+    }
+    if (this.x > this._maxX) {
+      this.x = this._maxX;
+      if (this.body) {
+        this.body.setVelocityX(0);
+      }
     }
 
     // Face the direction of travel
