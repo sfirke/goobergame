@@ -56,12 +56,17 @@ export class GameScene extends Phaser.Scene {
     }).setOrigin(1, 0).setDepth(10).setScrollFactor(0);
 
     // Jump hint (fixed to camera)
-    this.hintText = this.add.text(W / 2, H / 2, 'Press SPACE or swipe up to jump!', {
-      fontSize: '16px',
-      color: '#000000',
-      fontFamily: 'sans-serif',
-      align: 'center',
-    }).setOrigin(0.5).setDepth(10).setScrollFactor(0);
+    this.hintText = this.add.text(
+      W / 2,
+      H / 2,
+      'Jump: ↑ / W, Move: ← → or A / D\nPause: SPACE, Restart: ESC',
+      {
+        fontSize: '16px',
+        color: '#000000',
+        fontFamily: 'sans-serif',
+        align: 'center',
+      }
+    ).setOrigin(0.5).setDepth(10).setScrollFactor(0);
 
     this.goober.once('jumped', () => {
       if (this.hintText) {
@@ -70,13 +75,51 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
+    // Pause / restart controls
+    this.isPaused = false;
+    this.pauseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.escapeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
+    this.pauseKey.on('down', () => {
+      if (this.isDead) return;
+      this._togglePause();
+    });
+
+    this.escapeKey.on('down', () => {
+      this._restart();
+    });
+
+    const uiButtonStyle = {
+      fontSize: '16px',
+      color: '#000000',
+      fontFamily: 'sans-serif',
+      backgroundColor: '#ffffff',
+      padding: { x: 8, y: 4 },
+    };
+
+    this.pauseButton = this.add
+      .text(10, 10, 'Pause (SPACE)', uiButtonStyle)
+      .setOrigin(0, 0)
+      .setDepth(10)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this._togglePause());
+
+    this.restartButton = this.add
+      .text(10, 38, 'Restart (ESC)', uiButtonStyle)
+      .setOrigin(0, 0)
+      .setDepth(10)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this._restart());
+
     this.isDead = false;
     this._nextWormSpawnX = null;
     this._scheduleNextWorm();
   }
 
   update(time, delta) {
-    if (this.isDead) return;
+    if (this.isDead || this.isPaused) return;
 
     const elapsed = time - this.startTime;
     const speed = getGameSpeed(elapsed);
@@ -183,5 +226,92 @@ export class GameScene extends Phaser.Scene {
     this.time.delayedCall(300, () => {
       this.scene.start('GameOverScene', { score: finalScore });
     });
+  }
+
+  _togglePause() {
+    this._setPaused(!this.isPaused);
+  }
+
+  _setPaused(paused) {
+    if (this.isPaused === paused) return;
+    this.isPaused = paused;
+
+    if (paused) {
+      // Track pause start so game speed/score don't jump when resuming.
+      this._pauseStartTime = this.time.now;
+
+      this.physics.world.pause();
+      this.time.paused = true;
+
+      const W = this.scale.width;
+      const H = this.scale.height;
+
+      const background = this.add
+        .rectangle(W / 2, H / 2, W, H, 0x000000, 0.55)
+        .setScrollFactor(0)
+        .setDepth(50);
+
+      const panel = this.add
+        .rectangle(W / 2, H / 2, W * 0.7, H * 0.4, 0x000000, 0.65)
+        .setStrokeStyle(2, 0xffffff)
+        .setScrollFactor(0)
+        .setDepth(51);
+
+      const pausedText = this.add
+        .text(W / 2, H / 2 - 40, 'PAUSED', {
+          fontSize: '48px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+          fontFamily: 'sans-serif',
+        })
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(52);
+
+      const resumeText = this.add
+        .text(W / 2, H / 2 + 10, 'Press SPACE to resume', {
+          fontSize: '18px',
+          color: '#ffffff',
+          fontFamily: 'sans-serif',
+        })
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(52);
+
+      const restartText = this.add
+        .text(W / 2, H / 2 + 38, 'Press ESC to restart', {
+          fontSize: '16px',
+          color: '#dddddd',
+          fontFamily: 'sans-serif',
+        })
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(52);
+
+      this._pauseOverlay = this.add.container(0, 0, [background, panel, pausedText, resumeText, restartText]);
+      this.pauseButton.setText('Resume (SPACE)');
+    } else {
+      if (this._pauseOverlay) {
+        this._pauseOverlay.destroy();
+        this._pauseOverlay = null;
+      }
+
+      if (this._pauseStartTime) {
+        // Adjust startTime so game speed/score don't jump after pausing.
+        this.startTime += this.time.now - this._pauseStartTime;
+        this._pauseStartTime = null;
+      }
+
+      this.physics.world.resume();
+      this.time.paused = false;
+      this.pauseButton.setText('Pause (SPACE)');
+    }
+  }
+
+  _restart() {
+    if (this.isPaused) {
+      this._setPaused(false);
+    }
+    this.scene.start('GameScene');
   }
 }

@@ -4,7 +4,7 @@ import Phaser from 'phaser';
  * Goober — the player character.
  *
  * Rendered as a chipmunk emoji 🐿️.
- * Can jump with SPACE/UP and steer left/right in the air.
+ * Can jump with W/UP and steer left/right in the air (A/D or arrows).
  * Emoji flips to face the direction of travel.
  */
 export class Goober extends Phaser.GameObjects.Text {
@@ -25,7 +25,9 @@ export class Goober extends Phaser.GameObjects.Text {
 
     // Input setup
     this._cursors = scene.input.keyboard.createCursorKeys();
-    this._spaceKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this._wKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+    this._aKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+    this._dKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
     // Swipe tracking for mobile
     this._swipeStartY = 0;
@@ -46,10 +48,10 @@ export class Goober extends Phaser.GameObjects.Text {
   // Called every frame from GameScene
   // gameSpeed: current platform scroll speed (pixels/sec), used to scale squirrel movement
   update(gameSpeed = 200) {
-    // Jump input
+    // Jump input (Up arrow or W)
     const justPressed =
-      Phaser.Input.Keyboard.JustDown(this._spaceKey) ||
-      Phaser.Input.Keyboard.JustDown(this._cursors.up);
+      Phaser.Input.Keyboard.JustDown(this._cursors.up) ||
+      Phaser.Input.Keyboard.JustDown(this._wKey);
 
     if (justPressed) {
       this._jump();
@@ -60,10 +62,10 @@ export class Goober extends Phaser.GameObjects.Text {
     const speed = Math.max(300, gameSpeed * 1.2);
     let velocityX = 0;
 
-    if (this._cursors.left.isDown) {
+    if (this._cursors.left.isDown || this._aKey.isDown) {
       velocityX = -speed;
       this._facing = -1;
-    } else if (this._cursors.right.isDown) {
+    } else if (this._cursors.right.isDown || this._dKey.isDown) {
       velocityX = speed;
       this._facing = 1;
     }
