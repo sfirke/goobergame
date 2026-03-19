@@ -1,5 +1,9 @@
 name: Test and Deploy
 
+env:
+  # Force GitHub Actions to run on Node.js 24 (required once Node 20 is deprecated)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [main]
@@ -29,7 +33,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -55,7 +59,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
