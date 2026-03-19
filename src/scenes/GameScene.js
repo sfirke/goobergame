@@ -6,6 +6,10 @@ import { calcScore, getGameSpeed, getWormSpawnDistance, checkAABBCollision } fro
 // Ground position
 const GROUND_Y = 240;
 
+// Celebration trigger threshold.
+// Set to 67 for the true meme moment, or lower for faster iteration.
+const SIXTY_SEVEN_CELEBRATION_SCORE = 67;
+
 export class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
@@ -75,6 +79,7 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
+
     // Pause / restart controls
     this.isPaused = false;
     this.pauseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -114,6 +119,7 @@ export class GameScene extends Phaser.Scene {
       .on('pointerdown', () => this._restart());
 
     this.isDead = false;
+    this._sixtySevenSalutePlayed = false;
     this._nextWormSpawnX = null;
     this._scheduleNextWorm();
   }
@@ -141,6 +147,13 @@ export class GameScene extends Phaser.Scene {
     this._bestScrollX = Math.max(this._bestScrollX, this.cameras.main.scrollX);
     const score = calcScore(this._bestScrollX);
     this.scoreText.setText(`Score: ${score}`);
+
+    // Easter egg: when score reaches the celebration threshold, go full ridiculous.
+    // (Currently set low so the effect can be iterated quickly during development.)
+    if (!this._sixtySevenSalutePlayed && score >= SIXTY_SEVEN_CELEBRATION_SCORE) {
+      this._sixtySevenSalutePlayed = true;
+      this._playSixtySevenSalute();
+    }
 
     // Keep player horizontally clamped inside the current viewport.
     this.goober._minX = this.cameras.main.scrollX + 20;
@@ -227,6 +240,133 @@ export class GameScene extends Phaser.Scene {
       this.scene.start('GameOverScene', { score: finalScore });
     });
   }
+
+  _playSixtySevenSalute() {
+    try {
+      const W = this.scale.width;
+      const H = this.scale.height;
+
+      // Make the screen feel like it exploded - gentler shake + shorter flash.
+      this.cameras.main.shake(850, 0.02, true);
+      this.cameras.main.flash(500, 255, 255, 255, true);
+
+      // Keep the celebration high above the player so it doesn't obscure Goober.
+      const explosionY = H * 0.22;
+      const centerX = Phaser.Math.Clamp(this.goober.x - this.cameras.main.scrollX, 90, W - 90);
+
+      // Big neon 6-7 banner (because of course).
+      const banner = this.add
+        .text(centerX, explosionY, '6️⃣ 7️⃣', {
+          fontSize: '140px',
+          fontStyle: 'bold',
+          color: '#ffeb3b',
+          stroke: '#000000',
+          strokeThickness: 10,
+          fontFamily: 'sans-serif',
+        })
+        .setOrigin(0.5)
+        .setDepth(200)
+        .setScrollFactor(0);
+
+      const subtext = this.add
+        .text(centerX, H * 0.36, 'SIX SEVEN!!!', {
+          fontSize: '52px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 8,
+          fontFamily: 'sans-serif',
+        })
+        .setOrigin(0.5)
+        .setDepth(200)
+        .setScrollFactor(0);
+
+      this.tweens.add({
+        targets: [banner, subtext],
+        scale: { from: 0.1, to: 1.2 },
+        angle: 360,
+        duration: 1700,
+        ease: 'Back.Out',
+        onComplete: () => {
+          this.tweens.add({
+            targets: [banner, subtext],
+            alpha: 0,
+            duration: 800,
+            ease: 'Power1',
+            onComplete: () => {
+              banner.destroy();
+              subtext.destroy();
+            },
+          });
+        },
+      });
+
+      // Confetti + fire emojis using text objects (guaranteed to be visible).
+      const confettiChars = ['🎉', '✨', '🎇', '💥', '🌟'];
+      const confettiCount = 24;
+      for (let i = 0; i < confettiCount; i += 1) {
+        const confetti = this.add
+          .text(centerX, explosionY, confettiChars[i % confettiChars.length], {
+            fontSize: `${Phaser.Math.Between(22, 46)}px`,
+          })
+          .setOrigin(0.5)
+          .setDepth(190)
+          .setScrollFactor(0);
+
+        const angle = Phaser.Math.FloatBetween(-1.2, -1.95); // mostly upward
+        const distance = Phaser.Math.Between(140, 360);
+        const targetX = centerX + Math.cos(angle) * distance;
+        const targetY = explosionY + Math.sin(angle) * distance;
+
+        this.tweens.add({
+          targets: confetti,
+          x: targetX,
+          y: targetY,
+          alpha: 0,
+          scale: 1.2,
+          duration: Phaser.Math.Between(900, 1400),
+          ease: 'Cubic.Out',
+          onComplete: () => confetti.destroy(),
+        });
+      }
+
+      const fireCount = 22;
+      for (let i = 0; i < fireCount; i += 1) {
+        const fire = this.add
+          .text(centerX, explosionY, '🔥', {
+            fontSize: `${Phaser.Math.Between(34, 76)}px`,
+          })
+          .setOrigin(0.5)
+          .setDepth(210)
+          .setScrollFactor(0);
+
+        const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+        const distance = Phaser.Math.Between(140, 420);
+        const targetX = centerX + Math.cos(angle) * distance;
+        const targetY = explosionY + Math.sin(angle) * distance;
+
+        this.tweens.add({
+          targets: fire,
+          x: targetX,
+          y: targetY,
+          alpha: 0,
+          scale: 1.4,
+          duration: Phaser.Math.Between(1200, 1800),
+          ease: 'Cubic.Out',
+          onComplete: () => fire.destroy(),
+        });
+      }
+
+      // Bonus: legendary console message.
+      // eslint-disable-next-line no-console
+      console.log('%c6-7? More like 67, the legend!', 'color: magenta; font-size: 16px; font-weight: bold;');
+    } catch (err) {
+      // Ensure the celebration cannot crash the main game loop.
+      // eslint-disable-next-line no-console
+      console.warn('Failed to run 6-7 celebration', err);
+    }
+  }
+
 
   _togglePause() {
     this._setPaused(!this.isPaused);
