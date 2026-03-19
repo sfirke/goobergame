@@ -1,24 +1,24 @@
 import { describe, it, expect } from 'vitest';
-import { calcScore, getGameSpeed, getWormSpawnDelay, checkAABBCollision } from '../src/logic/scoring.js';
+import { calcScore, getGameSpeed, getWormSpawnDistance, checkAABBCollision } from '../src/logic/scoring.js';
 
 // ---------------------------------------------------------------------------
 // calcScore
 // ---------------------------------------------------------------------------
 describe('calcScore', () => {
-  it('is 0 at time 0', () => {
+  it('is 0 at distance 0', () => {
     expect(calcScore(0)).toBe(0);
   });
 
-  it('is 1 after exactly 1 second', () => {
-    expect(calcScore(1000)).toBe(1);
+  it('is 1 after exactly 100 pixels', () => {
+    expect(calcScore(100)).toBe(1);
   });
 
-  it('is 10 after exactly 10 seconds', () => {
-    expect(calcScore(10_000)).toBe(10);
+  it('is 10 after exactly 1000 pixels', () => {
+    expect(calcScore(1000)).toBe(10);
   });
 
-  it('floors partial seconds', () => {
-    expect(calcScore(4750)).toBe(4);
+  it('floors partial pixels', () => {
+    expect(calcScore(475)).toBe(4);
   });
 });
 
@@ -49,19 +49,19 @@ describe('getGameSpeed', () => {
 });
 
 // ---------------------------------------------------------------------------
-// getWormSpawnDelay
+// getWormSpawnDistance
 // ---------------------------------------------------------------------------
-describe('getWormSpawnDelay', () => {
-  it('starts around 2500ms', () => {
-    expect(getWormSpawnDelay(0)).toBe(2500);
+describe('getWormSpawnDistance', () => {
+  it('starts at 300 pixels at worldX 0', () => {
+    expect(getWormSpawnDistance(0)).toBe(300);
   });
 
-  it('decreases as the game goes on', () => {
-    expect(getWormSpawnDelay(30_000)).toBeLessThan(getWormSpawnDelay(0));
+  it('decreases as you progress further into the world', () => {
+    expect(getWormSpawnDistance(10_000)).toBeLessThan(getWormSpawnDistance(0));
   });
 
-  it('never goes below 600ms', () => {
-    expect(getWormSpawnDelay(999_999)).toBe(600);
+  it('never goes below 70 pixels', () => {
+    expect(getWormSpawnDistance(999_999)).toBe(70);
   });
 });
 
