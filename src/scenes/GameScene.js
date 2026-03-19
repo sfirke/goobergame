@@ -103,7 +103,7 @@ export class GameScene extends Phaser.Scene {
     this.goober._minX = this.cameras.main.scrollX + 20;
     this.goober._maxX = this.cameras.main.scrollX + W - 20;
 
-    this.goober.update();
+    this.goober.update(speed);
 
     // Check if enough world distance has elapsed to spawn a new worm.
     this._checkAndSpawnWorm();

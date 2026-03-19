@@ -44,7 +44,8 @@ export class Goober extends Phaser.GameObjects.Text {
   }
 
   // Called every frame from GameScene
-  update() {
+  // gameSpeed: current platform scroll speed (pixels/sec), used to scale squirrel movement
+  update(gameSpeed = 200) {
     // Jump input
     const justPressed =
       Phaser.Input.Keyboard.JustDown(this._spaceKey) ||
@@ -55,7 +56,8 @@ export class Goober extends Phaser.GameObjects.Text {
     }
 
     // In-air steering (left/right)
-    const speed = 300; // pixels/sec horizontal speed
+    // Squirrel moves 1.2x the platform speed, ensuring it can always outrun the scroll
+    const speed = Math.max(300, gameSpeed * 1.2);
     let velocityX = 0;
 
     if (this._cursors.left.isDown) {
