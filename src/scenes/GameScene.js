@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Goober } from '../objects/Goober.js';
 import { Worm } from '../objects/Worm.js';
-import { calcScore, getGameSpeed, getWormSpawnDelay, checkAABBCollision } from '../logic/scoring.js';
+import { calcScore, getGameSpeed, getWormSpawnDistance, checkAABBCollision } from '../logic/scoring.js';
 
 // Ground position
 const GROUND_Y = 240;
@@ -34,9 +34,9 @@ export class GameScene extends Phaser.Scene {
     this.goober.setDepth(10);
     this.goober.body.setCollideWorldBounds(true);
 
-    // Set camera to follow the Goober
-    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, H);
-    this.cameras.main.startFollow(this.goober, true, 0.5, 0);
+    // Camera is managed manually — no auto-follow
+    // scrollX only ever increases, giving a fixed rightward flow like Mario.
+    this._bestScrollX = 0;
 
     // Create ground platform (very wide to extend across the world)
     this.groundPlatform = this.physics.add.staticGroup();
@@ -71,25 +71,47 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.isDead = false;
+    this._nextWormSpawnX = null;
     this._scheduleNextWorm();
   }
 
-  update(time, _delta) {
+  update(time, delta) {
     if (this.isDead) return;
 
     const elapsed = time - this.startTime;
-    const score = calcScore(elapsed);
+    const speed = getGameSpeed(elapsed);
+    const scrollOffset = speed * (delta / 1000);
+    const W = this.scale.width;
+
+    // Auto-advance the camera at the current game speed.
+    // Additionally, if the player has run close to the right edge, push the
+    // camera forward to keep them in view — this is how running right builds
+    // score faster (same as Mario).
+    const RIGHT_MARGIN = 80;
+    let newScrollX = this.cameras.main.scrollX + scrollOffset;
+    newScrollX = Math.max(newScrollX, this.goober.x - (W - RIGHT_MARGIN));
+
+    // Camera never moves backwards — assign and lock in the advance.
+    this.cameras.main.scrollX = newScrollX;
+
+    // Score is the furthest the camera has ever scrolled — can never decrease.
+    this._bestScrollX = Math.max(this._bestScrollX, this.cameras.main.scrollX);
+    const score = calcScore(this._bestScrollX);
     this.scoreText.setText(`Score: ${score}`);
 
-    // Push left boundary forward with the camera so the player can't hide behind it
+    // Keep player horizontally clamped inside the current viewport.
     this.goober._minX = this.cameras.main.scrollX + 20;
+    this.goober._maxX = this.cameras.main.scrollX + W - 20;
 
     this.goober.update();
 
-    const speed = getGameSpeed(elapsed);
+    // Check if enough world distance has elapsed to spawn a new worm.
+    this._checkAndSpawnWorm();
+
+    // Worms sit at fixed world positions — the camera scroll is what makes
+    // them appear to move. Only destroy them once off the left of the screen.
     const camLeft = this.cameras.main.scrollX;
     this.worms.getChildren().forEach((worm) => {
-      worm.x -= speed / 60;
       if (worm.x < camLeft - 50) {
         worm.destroy();
       }
@@ -121,14 +143,21 @@ export class GameScene extends Phaser.Scene {
   }
 
   _scheduleNextWorm() {
-    const elapsed = this.isDead ? 0 : (this.time.now - this.startTime);
-    const delay = getWormSpawnDelay(elapsed);
+    // Track the world X position at which the last worm should spawn
+    if (!this._nextWormSpawnX) {
+      this._nextWormSpawnX = this.cameras.main.scrollX + this.scale.width + 30;
+    }
+  }
 
-    this.time.delayedCall(delay, () => {
-      if (this.isDead) return;
+  _checkAndSpawnWorm() {
+    // Spawn a worm when we've progressed far enough into the world
+    const currentSpawnX = this.cameras.main.scrollX + this.scale.width + 30;
+    const spawnDistance = getWormSpawnDistance(this._nextWormSpawnX);
+
+    if (currentSpawnX >= this._nextWormSpawnX) {
       this._spawnWorm();
-      this._scheduleNextWorm();
-    });
+      this._nextWormSpawnX += spawnDistance;
+    }
   }
 
   _spawnWorm() {
@@ -145,8 +174,7 @@ export class GameScene extends Phaser.Scene {
     if (this.isDead) return;
     this.isDead = true;
 
-    const elapsed = this.time.now - this.startTime;
-    const finalScore = calcScore(elapsed);
+    const finalScore = calcScore(this._bestScrollX);
 
     this.time.delayedCall(300, () => {
       this.scene.start('GameOverScene', { score: finalScore });

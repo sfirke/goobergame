@@ -7,14 +7,14 @@
  */
 
 /**
- * Score is simply the number of seconds survived (rounded down).
- * The displayed score is "distance traveled" — faster survival = more points.
+ * Score is based on distance traveled (world X position).
+ * Every 10 world pixels equals 1 point.
  *
- * @param {number} elapsedMs  - milliseconds since the run started
- * @returns {number}          - integer score
+ * @param {number} distancePx  - world X position traveled (pixels)
+ * @returns {number}           - integer score
  */
-export function calcScore(elapsedMs) {
-  return Math.floor(elapsedMs / 1000);
+export function calcScore(distancePx) {
+  return Math.floor(distancePx / 10);
 }
 
 /**
@@ -33,17 +33,18 @@ export function getGameSpeed(elapsedMs) {
 }
 
 /**
- * How long (ms) to wait before spawning the next worm.
- * Starts at 2500ms, shrinks as the game speeds up, never below 600ms.
+ * How many world pixels should elapse between worm spawns.
+ * Starts at 300px, shrinks as distance increases, never below 70px.
+ * Effectively: progress further → encounter worms more frequently.
  *
- * @param {number} elapsedMs  - milliseconds since the run started
- * @returns {number}          - spawn delay in milliseconds
+ * @param {number} worldX  - the player's world X position (or camera scroll X)
+ * @returns {number}       - spawn distance in world pixels
  */
-export function getWormSpawnDelay(elapsedMs) {
-  const speed = getGameSpeed(elapsedMs);
-  // As speed doubles (200 → 400 → 800), delay halves (2500 → 1250 → 625)
-  const delay = 2500 * (200 / speed);
-  return Math.max(delay, 600);
+export function getWormSpawnDistance(worldX) {
+  // Every 5000 pixels, spawn rate increases by ~1.5x (distance between worms tightens)
+  const distanceLevel = Math.floor(worldX / 5000);
+  const spawnDistance = 300 * Math.pow(0.85, distanceLevel);
+  return Math.max(spawnDistance, 70);
 }
 
 /**
