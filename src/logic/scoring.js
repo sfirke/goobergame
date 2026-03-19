@@ -8,13 +8,13 @@
 
 /**
  * Score is based on distance traveled (world X position).
- * Every 10 world pixels equals 1 point.
+ * 1 point per 100 world pixels (~2 pts/sec at starting speed).
  *
  * @param {number} distancePx  - world X position traveled (pixels)
  * @returns {number}           - integer score
  */
 export function calcScore(distancePx) {
-  return Math.floor(distancePx / 10);
+  return Math.floor(distancePx / 100);
 }
 
 /**

@@ -71,16 +71,18 @@ export class Goober extends Phaser.GameObjects.Text {
       this.body.setVelocityX(velocityX);
     }
 
-    // Enforce boundaries
+    // Enforce boundaries.
+    // Only zero velocity if it's pushing *into* the wall — preserve velocity
+    // pointing away (so rightward input isn't cancelled by the left-wall push).
     if (this.x < this._minX) {
       this.x = this._minX;
-      if (this.body) {
+      if (this.body && this.body.velocity.x < 0) {
         this.body.setVelocityX(0);
       }
     }
     if (this.x > this._maxX) {
       this.x = this._maxX;
-      if (this.body) {
+      if (this.body && this.body.velocity.x > 0) {
         this.body.setVelocityX(0);
       }
     }
